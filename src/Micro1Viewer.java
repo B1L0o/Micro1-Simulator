@@ -1,4 +1,4 @@
-package project_ado.src;
+package src;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,7 +8,8 @@ import java.io.File;
 import java.util.*;
 import java.util.List;
 
-public class Micro1Viewer extends JPanel implements ActionListener{
+public class Micro1Viewer extends JPanel implements ActionListener
+{
     private JTextField[] registerFields;
     private JTextField loadInput;
     private JTextField loadAssemblyInput;
@@ -18,7 +19,6 @@ public class Micro1Viewer extends JPanel implements ActionListener{
     private JButton loadButton;
     private JButton loadAssemblyButton;
     private JButton memoryButton;
-    private JButton helpButton;
     private JButton quitButton;
 
     private Memory memory;
@@ -34,7 +34,8 @@ public class Micro1Viewer extends JPanel implements ActionListener{
         registerFields = new JTextField[8];
         for (int i = 0; i < 8; i++) {
             registerFields[i] = new JTextField("0");
-            registerFields[i].setEditable(false); 
+            registerFields[i].setEditable(false);
+            registerFields[i].setHorizontalAlignment(SwingConstants.RIGHT);
         }
         
         loadInput = new JTextField("Not Selected");
@@ -43,31 +44,33 @@ public class Micro1Viewer extends JPanel implements ActionListener{
         loadAssemblyInput.setEditable(false);
         stepInput = new JTextField("1");
         stepInput.setEditable(true);
+        stepInput.setHorizontalAlignment(SwingConstants.RIGHT);
+        loadAssemblyInput.setHorizontalAlignment(SwingConstants.RIGHT);
+        loadInput.setHorizontalAlignment(SwingConstants.RIGHT);
 
         loadAssemblyButton = new JButton("Load Assembly");
         stepButton = new JButton("Step");
         loadButton = new JButton("Load");
         memoryButton = new JButton("Memory");
-        helpButton = new JButton("Help");
         quitButton = new JButton("Quit");
 
         setLayout(new GridLayout(15, 0));
         
-        add(new JLabel("Register 1:"));
+        add(new JLabel("   Register 1:"));
         add(registerFields[0]);
-        add(new JLabel("Register 2:"));
+        add(new JLabel("   Register 2:"));
         add(registerFields[1]);
-        add(new JLabel("Register 3:"));
+        add(new JLabel("   Register 3:"));
         add(registerFields[2]);
-        add(new JLabel("Register 4:"));
+        add(new JLabel("   Register 4:"));
         add(registerFields[3]);
-        add(new JLabel("Register 5:"));
+        add(new JLabel("   Register 5:"));
         add(registerFields[4]);
-        add(new JLabel("Register 6:"));
+        add(new JLabel("   Register 6:"));
         add(registerFields[5]);
-        add(new JLabel("Register 7:"));
+        add(new JLabel("   Register 7:"));
         add(registerFields[6]);
-        add(new JLabel("Register 8:"));
+        add(new JLabel("   Register 8:"));
         add(registerFields[7]);
         
         
@@ -78,14 +81,12 @@ public class Micro1Viewer extends JPanel implements ActionListener{
         add(stepButton);
         add(stepInput);
         add(memoryButton);
-        add(helpButton);
         add(quitButton);
 
         loadButton.addActionListener(this);
         loadAssemblyButton.addActionListener(this);
         stepButton.addActionListener(this);
         memoryButton.addActionListener(this);
-        helpButton.addActionListener(this);
         quitButton.addActionListener(this);
 
         
@@ -120,7 +121,14 @@ public class Micro1Viewer extends JPanel implements ActionListener{
                 {
                     String a = splitedLine[1];
                     String b = (splitedLine.length == 2 ) ? "0" :splitedLine[2];
-                    instruction = Integer.toString(instructions.indexOf(splitedLine[0]), 16) + a + b;				
+                    if (splitedLine[0].equals( "if")) 
+                    {
+                        instruction = "f" + a + b; 
+                    }
+                    else
+                    {
+                        instruction = Integer.toString(instructions.indexOf(splitedLine[0]), 16) + a + b;
+                    }				
                 }
                 memory.write(address++, Integer.parseInt(instruction,16));
             }
@@ -143,31 +151,23 @@ public class Micro1Viewer extends JPanel implements ActionListener{
         }
     }
     
-    public void help() {
-        System.out.println("load fileName \t loads hex memory image into memory");
-        System.out.println("loadAssembly fileName \t loads Assembly into memory");
-        System.out.println("memory \t\t dumps memory to console");
-        System.out.println("registers \t dumps registers to console");
-        System.out.println("step N \t\t executes next N instructions or until halt");
-        System.out.println("help \t\t displays this message");
-        System.out.println("quit \t\t terminate console");
-    }
     
     public void actionPerformed(ActionEvent evt) 
     {
+        updateRegisters();
         if (evt.getSource() == memoryButton) 
         {
             String res = memory.dump();
 
             JFrame tst = new JFrame("Memory Display");
-            tst.setSize(400, 300); 
+            tst.setSize(200, 150); 
             tst.setLocationRelativeTo(null); 
             tst.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
             JTextArea textArea = new JTextArea(res);
             textArea.setEditable(false);
 
-            textArea.setMargin(new Insets(4, 100, 4, 4));
+            textArea.setMargin(new Insets(4, 4, 4, 4));
 
             JScrollPane scrollPane = new JScrollPane(textArea);
             scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -184,6 +184,7 @@ public class Micro1Viewer extends JPanel implements ActionListener{
                 load(selectedFile);
                 loadInput.setText(selectedFile.toString());
                 loadAssemblyInput.setText("Not Selected");
+                cpu.resetRegister();
                 updateRegisters();
             }
         }
@@ -195,12 +196,9 @@ public class Micro1Viewer extends JPanel implements ActionListener{
                 loadAssembly(selectedFile);
                 loadAssemblyInput.setText(selectedFile.toString());
                 loadInput.setText("Not Selected");
+                cpu.resetRegister();
                 updateRegisters();
             }
-        }
-        else if (evt.getSource() == helpButton)
-        {
-            help();
         }
         else if (evt.getSource() == stepButton) 
         {
@@ -209,13 +207,13 @@ public class Micro1Viewer extends JPanel implements ActionListener{
             boolean halt = false;
             for (int i = 0; i < num && !halt; i++) 
             {
-                updateRegisters();
                 if (!halt)
                     halt = cpu.step();
                 if (halt) {
                     System.out.println("program terminated");
                     break;
                 }
+                updateRegisters();
             }
         }
         else if (evt.getSource() == quitButton) 

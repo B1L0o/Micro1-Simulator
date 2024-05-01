@@ -1,6 +1,7 @@
-package project_ado.src;
+package src;
 
-import java.time.temporal.Temporal;
+import java.util.Arrays;
+import java.util.List;
 
 public class Memory 
 {
@@ -15,19 +16,24 @@ public class Memory
         mem = new int[cap];
     }
 
-    public boolean read(int address, Processor processor)
+    public int read(int address, Processor processor)
     {
-        int current = mem[address];
-        if (current == 0)
-            return false;
-        String currentVal = Integer.toString(Integer.parseInt(Integer.toString(current), 10), 16);
+        processor.setIR(mem[address]);
+        
+        if (processor.getIR() == 0)
+            return 0;
+        String currentVal = Integer.toString(Integer.parseInt(Integer.toString(processor.getIR()), 10), 16);
         int len = currentVal.length();
         if (len != 3)
-            return true;
-        current = Integer.parseInt(currentVal);
-        int a = (current/10)%10;
-        int b = current%10;
-        int p = (current/100);
+            return 0;
+        String[] words = currentVal.split("");
+        
+        String[] index = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"};
+        List<String> indx = Arrays.asList(index);
+        
+        int a = indx.indexOf(words[1]);
+        int b = indx.indexOf(words[2]);
+        int p = indx.indexOf(words[0]);
         switch (p) {
             case 1:
                 processor.load(a, b);
@@ -71,8 +77,11 @@ public class Memory
             case 14:
                 processor.bwd(a, b);
                 break;
+            case 15:
+                processor.IF(a, b);
+                break;
         }
-        return true;
+        return 1;
     }
 
     public void write(int address, int value) {
@@ -87,7 +96,7 @@ public class Memory
         for (int i = 0; i < mem.length; i++) 
         {
 
-            res += String.format("%02X: %08X%n", i, mem[i]) + "\n";
+            res += String.format("%02X:              %08X%n", i, mem[i]) + "\n";
         }
         return res;
     }

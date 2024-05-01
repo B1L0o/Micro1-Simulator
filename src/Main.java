@@ -1,10 +1,11 @@
-package project_ado.src;
+package src;
 
 import javax.swing.*;
 import java.io.IOException;
 
 
-public class Main {
+public class Main 
+{
     public static void main(String[] args) throws IOException {
         JFrame frame = new JFrame("Micro-1 Viewer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
